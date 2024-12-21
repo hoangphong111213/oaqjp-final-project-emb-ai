@@ -3,7 +3,7 @@ Flask server application that processes emotion analysis from text input.
 This module handles the '/emotionDetector' route and integrates with an emotion detection API.
 """
 
-from flask import Flask, request, jsonify
+from flask import Flask, render_template, request
 from EmotionDetection.emotion_detection import emotion_detector
 
 app = Flask(__name__)
@@ -21,18 +21,14 @@ def detect_emotion():
         json: A JSON response containing emotion analysis or an error message.
     """
     # Retrieve and clean the input statement
-    statement = request.args.get("statement", "").strip()
-
-    # If the statement is blank, return an error message
-    if not statement:
-        return jsonify({"message": "Invalid text! Please try again!"}), 400
+    statement = request.args.get("textToAnalyze", "").strip()
 
     # Call the emotion_detector function to analyze the emotion of the statement
     result = emotion_detector(statement)
 
     # If the dominant emotion is None, return an error message
     if result['dominant_emotion'] is None:
-        return jsonify({"message": "Invalid text! Please try again!"}), 400
+        return "Invalid text! Please try again!"
 
     # Prepare the response with the emotion analysis
     response = (
@@ -40,7 +36,18 @@ def detect_emotion():
         f"'disgust': {result['disgust']}, 'fear': {result['fear']}, 'joy': {result['joy']} "
         f"and 'sadness': {result['sadness']}. The dominant emotion is {result['dominant_emotion']}."
     )
-    return jsonify({"response": response})
+    return response
+
+@app.route("/")
+def render_index_page():
+    """
+    Renders the index page of the application.
+
+    Returns:
+        html: The rendered HTML page.
+    """
+    return render_template('index.html')
 
 if __name__ == "__main__":
-    app.run(debug=True, host="localhost", port=5000)
+    app.run(host="0.0.0.0", port=5000)
+    
